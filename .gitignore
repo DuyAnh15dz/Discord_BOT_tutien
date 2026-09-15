@@ -1,0 +1,42 @@
+# ===== Virtual Environment =====
+venv/
+.venv/
+env/
+ENV/
+
+# ===== Environment Variables =====
+.env
+.env.*
+*.env
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*$py.class
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+
+# ===== Database =====
+Database_MYSQL/
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+data/
+
+# ===== Logs =====
+*.log
+logs/
+
+# ===== IDE =====
+.vscode/
+.idea/
+*.swp
+
+# ===== OS =====
+.DS_Store
+Thumbs.db

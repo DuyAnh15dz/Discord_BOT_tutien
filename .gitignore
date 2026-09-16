@@ -41,3 +41,6 @@ logs/
 # ===== OS =====
 .DS_Store
 Thumbs.db
+# Scripts chứa mật khẩu
+scripts/backup.ps1
+scripts/*.ps1

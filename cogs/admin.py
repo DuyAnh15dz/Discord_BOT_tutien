@@ -438,7 +438,7 @@ class Admin(commands.Cog):
         await interaction.followup.send(embed=embed)
 
     # ============================================================
-    # /additem (cho linh thảo, khoáng thạch, đan dược, đạo cụ)
+    # /additem
     # ============================================================
     @app_commands.command(
         name='additem',
@@ -547,7 +547,6 @@ class Admin(commands.Cog):
                 them_cong_phap_vao_tui,
             )
 
-            # Map loai → template table
             if loai == 'dan_phuong':
                 tmpl_table = 'tmpl_dan_duoc'
             else:
@@ -572,7 +571,6 @@ class Admin(commands.Cog):
                 cursor.close()
                 conn.close()
 
-            # Gọi hàm tương ứng
             if loai == 'dan_phuong':
                 success = them_dan_phuong_vao_tui(
                     player.player_id, item['id'], so_luong
@@ -609,6 +607,7 @@ class Admin(commands.Cog):
         else:
             await interaction.followup.send(f'❌ Loại không hợp lệ: `{loai}`')
             return
+
     @additem.autocomplete('ten')
     async def additem_ten_autocomplete(
         self,
@@ -625,8 +624,8 @@ class Admin(commands.Cog):
             'dao_cu': 'tmpl_dao_cu',
             'linh_thao': 'tmpl_linh_thao',
             'khoang_thach': 'tmpl_khoang_thach',
-            'dan_phuong': 'tmpl_dan_duoc',      # ⭐ Đan phương = đan dược
-            'cong_phap': 'tmpl_cong_phap',       # ⭐ Công pháp
+            'dan_phuong': 'tmpl_dan_duoc',
+            'cong_phap': 'tmpl_cong_phap',
         }
 
         tmpl_table = mapping.get(loai)
@@ -660,8 +659,10 @@ class Admin(commands.Cog):
         finally:
             cursor.close()
             conn.close()
-            
-            
+
+    # ============================================================
+    # /test-bxh — ĐÃ SỬA: GỬI DM CHO PLAYER
+    # ============================================================
     @app_commands.command(
         name='test-bxh',
         description='[ADMIN] Test trao thưởng BXH (không đợi thứ 2)'
@@ -680,6 +681,26 @@ class Admin(commands.Cog):
             await interaction.followup.send(f'❌ {ket_qua["loi"]}')
             return
         
+        # ⭐ LẤY COG BXHTask ĐỂ GỬI DM CHO PLAYER
+        bxh_task_cog = self.bot.get_cog('BXHTask')
+        
+        so_dm_thanh_cong = 0
+        so_dm_that_bai = 0
+        ds_loi_dm = []
+        
+        if bxh_task_cog:
+            for code, ds in ket_qua['chi_tiet'].items():
+                for player in ds:
+                    try:
+                        await bxh_task_cog.gui_dm(player, code, ket_qua['tuan'])
+                        so_dm_thanh_cong += 1
+                    except Exception as e:
+                        so_dm_that_bai += 1
+                        ds_loi_dm.append(f'`{player.get("ten", "?")}`: {e}')
+                        print(f'[TEST-BXH] Lỗi gửi DM cho {player.get("discord_id")}: {e}')
+        else:
+            print('[TEST-BXH] Không tìm thấy cog BXHTask!')
+        
         # Build thống kê
         lines = []
         for code, ds in ket_qua['chi_tiet'].items():
@@ -697,11 +718,26 @@ class Admin(commands.Cog):
             value='\n'.join(lines) if lines else '*Không có player nào*',
             inline=False,
         )
+        embed.add_field(
+            name='📬 Gửi DM',
+            value=(
+                f'• Thành công: `{so_dm_thanh_cong}`\n'
+                f'• Thất bại: `{so_dm_that_bai}`'
+            ),
+            inline=False,
+        )
+        
+        if ds_loi_dm:
+            embed.add_field(
+                name='⚠️ Lỗi gửi DM (10 lỗi đầu)',
+                value='\n'.join(ds_loi_dm[:10]),
+                inline=False,
+            )
         
         await interaction.followup.send(embed=embed)
-        
-        # ============================================================
-    # /xoa-shopitem — Xóa 1 item cụ thể
+
+    # ============================================================
+    # /xoa-shopitem
     # ============================================================
     @app_commands.command(
         name='xoa-shopitem',
@@ -726,7 +762,6 @@ class Admin(commands.Cog):
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
         try:
-            # 1. Lấy thông tin item
             cursor.execute("""
                 SELECT 
                     si.*,
@@ -748,8 +783,6 @@ class Admin(commands.Cog):
             ten_item = item.get('ten') or '?'
             
             if vinh_vien:
-                # ⭐ Xóa vĩnh viễn
-                # Check FK trong log_giao_dich
                 cursor.execute("""
                     SELECT COUNT(*) AS so_luong FROM log_giao_dich
                     WHERE item_type = %s AND item_id = %s
@@ -757,8 +790,6 @@ class Admin(commands.Cog):
                 row = cursor.fetchone()
                 
                 if row['so_luong'] > 0:
-                    # Có log → không thể xóa do FK RESTRICT
-                    # → Chuyển sang ẩn tạm
                     cursor.execute("""
                         UPDATE tmpl_shop_item SET is_active = 0 WHERE id = %s
                     """, (shop_id,))
@@ -775,7 +806,6 @@ class Admin(commands.Cog):
                     await interaction.followup.send(embed=embed)
                     return
                 
-                # Xóa vĩnh viễn
                 cursor.execute("DELETE FROM tmpl_shop_item WHERE id = %s", (shop_id,))
                 conn.commit()
                 
@@ -787,7 +817,6 @@ class Admin(commands.Cog):
                 await interaction.followup.send(embed=embed)
             
             else:
-                # ⭐ Ẩn tạm
                 cursor.execute("UPDATE tmpl_shop_item SET is_active = 0 WHERE id = %s", (shop_id,))
                 conn.commit()
                 
@@ -810,9 +839,8 @@ class Admin(commands.Cog):
             cursor.close()
             conn.close()
 
-
     # ============================================================
-    # /xoa-shopitem-hangloat — Xóa hàng loạt
+    # /xoa-shopitem-hangloat
     # ============================================================
     @app_commands.command(
         name='xoa-shopitem-hangloat',
@@ -859,7 +887,6 @@ class Admin(commands.Cog):
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
         try:
-            # Build query
             if loai == 'CongPhap':
                 if not giai_cap:
                     await interaction.followup.send('❌ Công pháp cần `giai_cap`!')
@@ -908,20 +935,16 @@ class Admin(commands.Cog):
             
             ds_shop_ids = [it['shop_id'] for it in ds_items]
             
-            # Xử lý xóa/ẩn
             if vinh_vien:
-                # Check FK cho từng item
                 so_xoa = 0
                 so_an = 0
                 
                 for shop_id in ds_shop_ids:
-                    # Lấy item_type + item_id
                     cursor.execute("""
                         SELECT item_type, item_id FROM tmpl_shop_item WHERE id = %s
                     """, (shop_id,))
                     row = cursor.fetchone()
                     
-                    # Check log
                     cursor.execute("""
                         SELECT COUNT(*) AS so_luong FROM log_giao_dich
                         WHERE item_type = %s AND item_id = %s
@@ -929,13 +952,11 @@ class Admin(commands.Cog):
                     log_row = cursor.fetchone()
                     
                     if log_row['so_luong'] > 0:
-                        # Có log → ẩn
                         cursor.execute("""
                             UPDATE tmpl_shop_item SET is_active = 0 WHERE id = %s
                         """, (shop_id,))
                         so_an += 1
                     else:
-                        # Không log → xóa
                         cursor.execute("DELETE FROM tmpl_shop_item WHERE id = %s", (shop_id,))
                         so_xoa += 1
                 
@@ -953,7 +974,6 @@ class Admin(commands.Cog):
                 await interaction.followup.send(embed=embed)
             
             else:
-                # Ẩn tất cả
                 format_strings = ','.join(['%s'] * len(ds_shop_ids))
                 cursor.execute(f"""
                     UPDATE tmpl_shop_item 
@@ -976,6 +996,8 @@ class Admin(commands.Cog):
             await interaction.followup.send(f'❌ Lỗi: {e}')
         finally:
             cursor.close()
-            conn.close()    
+            conn.close()
+
+
 async def setup(bot):
     await bot.add_cog(Admin(bot))

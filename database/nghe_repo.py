@@ -5,7 +5,35 @@ import random
 from datetime import datetime, timedelta
 from database.connection import get_connection
 
+import time
 
+# ============================================================
+# CACHE — giảm query DB cho dữ liệu tĩnh
+# ============================================================
+_CACHE = {}
+_CACHE_TTL = 300  # 5 phút
+
+
+def _get_cache(key):
+    """Lấy cache nếu còn hiệu lực."""
+    if key in _CACHE:
+        data, timestamp = _CACHE[key]
+        if time.time() - timestamp < _CACHE_TTL:
+            return data
+    return None
+
+
+def _set_cache(key, data):
+    """Lưu cache."""
+    _CACHE[key] = (data, time.time())
+
+
+def _clear_cache(key=None):
+    """Xóa cache (dùng khi update DB)."""
+    if key:
+        _CACHE.pop(key, None)
+    else:
+        _CACHE.clear()
 # ============================================================
 # PHÁP KHÍ
 # ============================================================

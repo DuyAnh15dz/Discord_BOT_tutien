@@ -39,7 +39,11 @@ def _clear_cache(key=None):
 # ============================================================
 
 def get_ds_phap_khi_template() -> list:
-    """Lấy danh sách template pháp khí."""
+    """Lấy template pháp khí. Cache 5 phút."""
+    cached = _get_cache('ds_phap_khi')
+    if cached:
+        return cached
+    
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     try:
@@ -55,11 +59,13 @@ def get_ds_phap_khi_template() -> list:
         for item in items:
             if isinstance(item.get('effect_moi_cap'), str):
                 item['effect_moi_cap'] = json.loads(item['effect_moi_cap'])
+        
+        _set_cache('ds_phap_khi', items)
         return items
     finally:
         cursor.close()
         conn.close()
-
+        
 
 def get_phap_khi_cong_thuc(phap_khi_id: int) -> dict:
     """Lấy công thức luyện pháp khí."""
@@ -588,7 +594,11 @@ def tinh_he_so_tran_nhan(he_tran: str, he_nhan: str) -> dict:
 # ============================================================
 
 def get_ds_tran_phap_full() -> list:
-    """Lấy danh sách trận pháp kèm yêu cầu đạo cụ."""
+    """Lấy danh sách trận pháp. Cache 5 phút."""
+    cached = _get_cache('ds_tran_phap')
+    if cached:
+        return cached
+    
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     try:
@@ -608,6 +618,8 @@ def get_ds_tran_phap_full() -> list:
         for item in items:
             if isinstance(item.get('effect'), str):
                 item['effect'] = json.loads(item['effect'])
+        
+        _set_cache('ds_tran_phap', items)
         return items
     finally:
         cursor.close()
@@ -881,7 +893,11 @@ def get_bonus_tran_phap(player_id: int) -> dict:
 # ============================================================
 
 def get_ds_bua_chu_full() -> list:
-    """Lấy danh sách bùa chú kèm nguyên liệu."""
+    """Lấy bùa chú. Cache 5 phút."""
+    cached = _get_cache('ds_bua_chu')
+    if cached:
+        return cached
+    
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     try:
@@ -903,6 +919,8 @@ def get_ds_bua_chu_full() -> list:
         for item in items:
             if isinstance(item.get('effect'), str):
                 item['effect'] = json.loads(item['effect'])
+        
+        _set_cache('ds_bua_chu', items)
         return items
     finally:
         cursor.close()

@@ -396,3 +396,37 @@ SELECT 'LinhDich', id,
 FROM tmpl_linh_dich;
 
 SELECT '✅ Seed data nghề đã xong!' AS ket_qua;
+
+USE tu_tien_db;
+
+-- ============================================================
+-- SEED TRẬN PHÁP (data gốc)
+-- ============================================================
+
+INSERT INTO tmpl_tran_phap 
+(code, ten, loai, he, pham_cap, yeu_cau_nghe_cap, 
+ effect, thoi_gian_hieu_luc, ban_kinh, mo_ta) 
+VALUES
+
+-- Phàm phẩm
+('tran_cong_kim', 'Kim Cương Trận', 'Buff', 'Kim', 'Pham', 1,
+ CAST('{"atk_pct": 10}' AS JSON), 1800, 0,
+ 'Tăng 10% ATK trong 30 phút'),
+
+('tran_thu_tho', 'Thổ Bích Trận', 'Buff', 'Tho', 'Pham', 1,
+ CAST('{"def_pct": 15}' AS JSON), 1800, 0,
+ 'Tăng 15% DEF trong 30 phút'),
+
+-- Linh phẩm
+('tran_hoi_moc', 'Mộc Linh Trận', 'Buff', 'Moc', 'Linh', 2,
+ CAST('{"hp_max_pct": 10, "hieu_ung_hoi_phuc_bonus": 20}' AS JSON), 3600, 0,
+ 'Tăng 10% HP Max và 20% hiệu ứng hồi phục trong 1 giờ'),
+
+('tran_do_huyet', 'Huyết Sát Trận', 'Debuff', 'Hoa', 'Linh', 3,
+ CAST('{"atk_pct": -15}' AS JSON), 900, 0,
+ 'Giảm 15% ATK của kẻ địch trong 15 phút'),
+
+-- Bảo phẩm
+('tran_am_duong', 'Âm Dương Trận', 'HonHop', 'Duong', 'Bao', 5,
+ CAST('{"atk_pct": 20, "def_pct": 20, "hp_max_pct": 10}' AS JSON), 3600, 0,
+ 'Tăng 20% ATK, 20% DEF, 10% HP Max trong 1 giờ');

@@ -22,8 +22,29 @@ dist/
 .pytest_cache/
 
 # ===== Database =====
-Database_MYSQL/
-*.sql
+# Ignore backup files trong Database_MYSQL
+Database_MYSQL/*_backup.sql
+Database_MYSQL/*_bak.sql
+Database_MYSQL/backups/
+
+# Cho phép các file schema/seed
+!Database_MYSQL/schema*.sql
+!Database_MYSQL/seed*.sql
+!Database_MYSQL/data_player.sql
+!Database_MYSQL/sơ đồ db.sql
+!Database_MYSQL/bot_discord.sql
+
+backups/*.sql
+backups/*.sql.zip
+*_backup.sql
+*_bak.sql
+
+# Cho phép các file schema/seed ở thư mục gốc (nếu có)
+!schema*.sql
+!seed*.sql
+!data_player.sql
+!bot_discord.sql
+
 *.sqlite
 *.sqlite3
 *.db

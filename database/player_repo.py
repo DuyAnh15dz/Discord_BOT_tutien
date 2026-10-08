@@ -1839,7 +1839,18 @@ def tinh_stat_runtime(player_id: int) -> dict:
                     ket_qua[stat_code] = ket_qua.get(stat_code, 0.0) + gia_tri_cuoi
                 except (ValueError, TypeError):
                     pass
-        # 10. Áp dụng percent stat
+             # ⭐ 10b. Cộng bonus từ pháp khí đang trang bị
+        bonus_pk = _get_bonus_phap_khi_inline(cursor, player_id)
+        for code, val in bonus_pk.items():
+            if code in stat_meta:
+                ket_qua[code] = ket_qua.get(code, 0.0) + val
+        
+        # ⭐ 10c. Cộng bonus từ trận pháp đang active
+        bonus_tp = _get_bonus_tran_phap_inline(cursor, player_id)
+        for code, val in bonus_tp.items():
+            if code in stat_meta:
+                ket_qua[code] = ket_qua.get(code, 0.0) + val
+        # 11. Áp dụng percent stat
         for code in list(ket_qua.keys()):
             if code.endswith('_pct'):
                 base_code = code[:-4]
@@ -5313,3 +5324,58 @@ def tang_stat_bxh_tuan(player_id: int, loai_bxh: str, gia_tri: int):
     finally:
         cursor.close()
         conn.close()
+        
+# ============================================================
+# HELPER INLINE — Bonus từ pháp khí & trận pháp
+# Đặt ở đây để tránh circular import với nghe_repo.py
+# ============================================================
+
+def _get_bonus_phap_khi_inline(cursor, player_id: int) -> dict:
+    """Tính bonus từ pháp khí đang trang bị. Dùng cursor có sẵn."""
+    import json
+    
+    cursor.execute("""
+        SELECT pk.effect_moi_cap, ppk.cap_do
+        FROM player_phap_khi ppk
+        JOIN tmpl_phap_khi pk ON pk.id = ppk.phap_khi_id
+        WHERE ppk.player_id = %s AND ppk.dang_trang_bi = 1
+    """, (player_id,))
+    
+    bonus = {}
+    for row in cursor.fetchall():
+        effect = row['effect_moi_cap']
+        if isinstance(effect, str):
+            effect = json.loads(effect)
+        cap = row['cap_do']
+        
+        for stat_code, gia_tri in effect.items():
+            try:
+                bonus[stat_code] = bonus.get(stat_code, 0.0) + float(gia_tri) * cap
+            except (ValueError, TypeError):
+                pass
+    
+    return bonus
+
+
+def _get_bonus_tran_phap_inline(cursor, player_id: int) -> dict:
+    """Tính bonus từ trận pháp active. Dùng cursor có sẵn."""
+    import json
+    
+    cursor.execute("""
+        SELECT pta.effect
+        FROM player_tran_phap_active pta
+        WHERE pta.player_id = %s AND pta.het_han_luc > NOW()
+    """, (player_id,))
+    
+    row = cursor.fetchone()
+    if not row or not row.get('effect'):
+        return {}
+    
+    effect = row['effect']
+    if isinstance(effect, str):
+        effect = json.loads(effect)
+    
+    if not isinstance(effect, dict):
+        return {}
+    
+    return effect

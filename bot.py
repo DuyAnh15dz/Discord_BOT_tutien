@@ -56,6 +56,9 @@ async def load_cogs():
         'cogs.daily',
         'cogs.dotpha_linhcan',
         'cogs.help',
+        'cogs.luyen_khi',
+        'cogs.tran_phap',
+        'cogs.bua_chu',
     ]
     for cog in cogs:
         try:

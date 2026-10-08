@@ -346,14 +346,124 @@ UPDATE tmpl_tran_phap SET
   exp_base = 20000
 WHERE pham_cap = 'Than';
 
--- Kiểm tra
-SELECT id, ten, pham_cap,
-       tran_co_so_luong AS co,
-       tran_ban_so_luong AS ban,
-       tran_nhan_so_luong AS nhan,
-       do_kho_quiz, bonus_moi_cau_dung, bonus_thoi_gian_moi_cau, exp_base
-FROM tmpl_tran_phap
-ORDER BY FIELD(pham_cap, 'Pham','Linh','Bao','Tien','Than');
+USE tutien;
+
+-- ============================================================
+-- FIX: Gán trận nhãn khớp hệ với trận pháp
+-- ============================================================
+
+-- 1. Xem trạng thái hiện tại
+SELECT id, ten, he, pham_cap, 
+       (SELECT ten FROM tmpl_tran_cu WHERE id = tran_nhan_id) AS nhan_hien_tai
+FROM tmpl_tran_phap;
+
+-- 2. Update lại trận nhãn theo hệ
+
+-- Phàm phẩm
+UPDATE tmpl_tran_phap 
+SET tran_nhan_id = (
+  SELECT id FROM tmpl_tran_cu 
+  WHERE loai = 'TranNhan' AND he = tmpl_tran_phap.he AND pham_cap = 'Pham'
+  LIMIT 1
+)
+WHERE pham_cap = 'Pham' AND he IS NOT NULL;
+
+-- Linh phẩm
+UPDATE tmpl_tran_phap 
+SET tran_nhan_id = (
+  SELECT id FROM tmpl_tran_cu 
+  WHERE loai = 'TranNhan' AND he = tmpl_tran_phap.he AND pham_cap = 'Linh'
+  LIMIT 1
+)
+WHERE pham_cap = 'Linh' AND he IS NOT NULL;
+
+-- Bảo phẩm
+UPDATE tmpl_tran_phap 
+SET tran_nhan_id = (
+  SELECT id FROM tmpl_tran_cu 
+  WHERE loai = 'TranNhan' AND he = tmpl_tran_phap.he AND pham_cap = 'Bao'
+  LIMIT 1
+)
+WHERE pham_cap = 'Bao' AND he IS NOT NULL;
+
+-- Tiên phẩm
+UPDATE tmpl_tran_phap 
+SET tran_nhan_id = (
+  SELECT id FROM tmpl_tran_cu 
+  WHERE loai = 'TranNhan' AND he = tmpl_tran_phap.he AND pham_cap = 'Tien'
+  LIMIT 1
+)
+WHERE pham_cap = 'Tien' AND he IS NOT NULL;
+
+-- Thần phẩm
+UPDATE tmpl_tran_phap 
+SET tran_nhan_id = (
+  SELECT id FROM tmpl_tran_cu 
+  WHERE loai = 'TranNhan' AND he = tmpl_tran_phap.he AND pham_cap = 'Than'
+  LIMIT 1
+)
+WHERE pham_cap = 'Than' AND he IS NOT NULL;
+
+-- 3. Verify
+SELECT 
+  tp.id,
+  tp.ten AS tran_phap,
+  tp.he AS he_tran,
+  tn.ten AS tran_nhan,
+  tn.he AS he_nhan,
+  CASE 
+    WHEN tp.he = tn.he THEN '✅ Khớp'
+    WHEN tn.he IS NULL THEN '⚠️ Nhãn vạn năng'
+    ELSE '❌ Sai hệ'
+  END AS trang_thai
+FROM tmpl_tran_phap tp
+LEFT JOIN tmpl_tran_cu tn ON tn.id = tp.tran_nhan_id
+ORDER BY tp.pham_cap;
+
+USE tu_tien_db;
+SELECT * FROM tmpl_tran_phap;
+-- Thêm nhãn Linh cho ngũ hành còn thiếu
+INSERT INTO tmpl_tran_cu (code, ten, loai, pham_cap, he, gia_linh_thach, mo_ta)
+VALUES
+('nhan_kim_linh', 'Kim Nhãn - Linh', 'TranNhan', 'Linh', 'Kim', 1500, 'Trận nhãn Kim hệ linh cấp'),
+('nhan_moc_linh', 'Mộc Nhãn - Linh', 'TranNhan', 'Linh', 'Moc', 1500, 'Trận nhãn Mộc hệ linh cấp'),
+('nhan_thuy_linh', 'Thủy Nhãn - Linh', 'TranNhan', 'Linh', 'Thuy', 1500, 'Trận nhãn Thủy hệ linh cấp'),
+('nhan_hoa_linh', 'Hỏa Nhãn - Linh', 'TranNhan', 'Linh', 'Hoa', 1500, 'Trận nhãn Hỏa hệ linh cấp'),
+('nhan_tho_linh', 'Thổ Nhãn - Linh', 'TranNhan', 'Linh', 'Tho', 1500, 'Trận nhãn Thổ hệ linh cấp')
+ON DUPLICATE KEY UPDATE ten = VALUES(ten);
+
+-- Thêm nhãn Bảo cho các hệ còn thiếu (đã có Dương, Âm)
+INSERT INTO tmpl_tran_cu (code, ten, loai, pham_cap, he, gia_linh_thach, mo_ta)
+VALUES
+('nhan_kim_bao', 'Kim Nhãn - Bảo', 'TranNhan', 'Bao', 'Kim', 6000, 'Trận nhãn Kim hệ bảo cấp'),
+('nhan_moc_bao', 'Mộc Nhãn - Bảo', 'TranNhan', 'Bao', 'Moc', 6000, 'Trận nhãn Mộc hệ bảo cấp'),
+('nhan_thuy_bao', 'Thủy Nhãn - Bảo', 'TranNhan', 'Bao', 'Thuy', 6000, 'Trận nhãn Thủy hệ bảo cấp'),
+('nhan_hoa_bao', 'Hỏa Nhãn - Bảo', 'TranNhan', 'Bao', 'Hoa', 6000, 'Trận nhãn Hỏa hệ bảo cấp'),
+('nhan_tho_bao', 'Thổ Nhãn - Bảo', 'TranNhan', 'Bao', 'Tho', 6000, 'Trận nhãn Thổ hệ bảo cấp')
+ON DUPLICATE KEY UPDATE ten = VALUES(ten);
+
+-- Thêm nhãn Tiên (mọi hệ)
+INSERT INTO tmpl_tran_cu (code, ten, loai, pham_cap, he, gia_tien_ngoc, mo_ta)
+VALUES
+('nhan_kim_tien', 'Kim Nhãn - Tiên', 'TranNhan', 'Tien', 'Kim', 50, 'Trận nhãn Kim hệ tiên cấp'),
+('nhan_moc_tien', 'Mộc Nhãn - Tiên', 'TranNhan', 'Tien', 'Moc', 50, 'Trận nhãn Mộc hệ tiên cấp'),
+('nhan_thuy_tien', 'Thủy Nhãn - Tiên', 'TranNhan', 'Tien', 'Thuy', 50, 'Trận nhãn Thủy hệ tiên cấp'),
+('nhan_hoa_tien', 'Hỏa Nhãn - Tiên', 'TranNhan', 'Tien', 'Hoa', 50, 'Trận nhãn Hỏa hệ tiên cấp'),
+('nhan_tho_tien', 'Thổ Nhãn - Tiên', 'TranNhan', 'Tien', 'Tho', 50, 'Trận nhãn Thổ hệ tiên cấp'),
+('nhan_loi_tien', 'Lôi Nhãn - Tiên', 'TranNhan', 'Tien', 'Loi', 50, 'Trận nhãn Lôi hệ tiên cấp'),
+('nhan_bang_tien', 'Băng Nhãn - Tiên', 'TranNhan', 'Tien', 'Bang', 50, 'Trận nhãn Băng hệ tiên cấp'),
+('nhan_phong_tien', 'Phong Nhãn - Tiên', 'TranNhan', 'Tien', 'Phong', 50, 'Trận nhãn Phong hệ tiên cấp')
+ON DUPLICATE KEY UPDATE ten = VALUES(ten);
+
+-- Thêm nhãn Thần (vạn năng)
+INSERT INTO tmpl_tran_cu (code, ten, loai, pham_cap, he, gia_tien_ngoc, mo_ta)
+VALUES
+('nhan_van_nang_than', 'Vạn Năng Nhãn - Thần', 'TranNhan', 'Than', NULL, 300, 'Trận nhãn vạn năng, dùng cho mọi hệ')
+ON DUPLICATE KEY UPDATE ten = VALUES(ten);
+
+-- Verify
+SELECT loai, pham_cap, COUNT(*) AS so_luong FROM tmpl_tran_cu 
+WHERE loai = 'TranNhan' GROUP BY pham_cap;
 -- ============================================================
 -- 9. SHOP: Thêm trận cụ, máu, linh dịch
 -- ============================================================

@@ -65,3 +65,8 @@ Thumbs.db
 # Scripts chứa mật khẩu
 scripts/backup.ps1
 scripts/*.ps1
+# ===== Public repo — chỉ push schema =====
+data_full.sql
+*_data.sql
+bot_discord.sql
+bot_discord_new.sql

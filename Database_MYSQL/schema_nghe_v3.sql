@@ -341,4 +341,25 @@ CREATE TABLE log_tran_phap_quiz (
     REFERENCES player (player_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+USE  tu_tien_db;
+
+CREATE TABLE IF NOT EXISTS player_tran_phap_active (
+  player_id BIGINT UNSIGNED NOT NULL,
+  tran_phap_id INT UNSIGNED NOT NULL,
+  effect JSON NOT NULL,
+  bat_dau_luc DATETIME DEFAULT CURRENT_TIMESTAMP,
+  het_han_luc DATETIME NOT NULL,
+  PRIMARY KEY (player_id),
+  CONSTRAINT fk_ptpa_player FOREIGN KEY (player_id)
+    REFERENCES player (player_id) ON DELETE CASCADE,
+  CONSTRAINT fk_ptpa_tran_phap FOREIGN KEY (tran_phap_id)
+    REFERENCES tmpl_tran_phap (id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Mỗi player chỉ có 1 trận pháp active';
+
+-- Verify
+SHOW TABLES LIKE 'player_tran_phap_active';
+DESCRIBE player_tran_phap_active;
+
 SELECT '✅ Schema nghề đã tạo thành công!' AS ket_qua;
+

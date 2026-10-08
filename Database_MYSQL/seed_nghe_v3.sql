@@ -358,53 +358,16 @@ SELECT id, ten, he, pham_cap,
 FROM tmpl_tran_phap;
 
 -- 2. Update lại trận nhãn theo hệ
-
--- Phàm phẩm
 UPDATE tmpl_tran_phap 
 SET tran_nhan_id = (
   SELECT id FROM tmpl_tran_cu 
-  WHERE loai = 'TranNhan' AND he = tmpl_tran_phap.he AND pham_cap = 'Pham'
+  WHERE loai = 'TranNhan' 
+    AND he = tmpl_tran_phap.he 
+    AND pham_cap = tmpl_tran_phap.pham_cap
   LIMIT 1
 )
-WHERE pham_cap = 'Pham' AND he IS NOT NULL;
+WHERE he IS NOT NULL;
 
--- Linh phẩm
-UPDATE tmpl_tran_phap 
-SET tran_nhan_id = (
-  SELECT id FROM tmpl_tran_cu 
-  WHERE loai = 'TranNhan' AND he = tmpl_tran_phap.he AND pham_cap = 'Linh'
-  LIMIT 1
-)
-WHERE pham_cap = 'Linh' AND he IS NOT NULL;
-
--- Bảo phẩm
-UPDATE tmpl_tran_phap 
-SET tran_nhan_id = (
-  SELECT id FROM tmpl_tran_cu 
-  WHERE loai = 'TranNhan' AND he = tmpl_tran_phap.he AND pham_cap = 'Bao'
-  LIMIT 1
-)
-WHERE pham_cap = 'Bao' AND he IS NOT NULL;
-
--- Tiên phẩm
-UPDATE tmpl_tran_phap 
-SET tran_nhan_id = (
-  SELECT id FROM tmpl_tran_cu 
-  WHERE loai = 'TranNhan' AND he = tmpl_tran_phap.he AND pham_cap = 'Tien'
-  LIMIT 1
-)
-WHERE pham_cap = 'Tien' AND he IS NOT NULL;
-
--- Thần phẩm
-UPDATE tmpl_tran_phap 
-SET tran_nhan_id = (
-  SELECT id FROM tmpl_tran_cu 
-  WHERE loai = 'TranNhan' AND he = tmpl_tran_phap.he AND pham_cap = 'Than'
-  LIMIT 1
-)
-WHERE pham_cap = 'Than' AND he IS NOT NULL;
-
--- 3. Verify
 SELECT 
   tp.id,
   tp.ten AS tran_phap,

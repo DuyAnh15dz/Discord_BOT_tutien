@@ -578,29 +578,51 @@ class LuyenDan(commands.Cog):
         self.bot = bot
     
     @app_commands.command(
-        name='luyendan',
-        description='Luyện đan từ linh thảo'
-    )
+    name='luyendan',
+    description='Luyện đan từ linh thảo'
+)
     async def luyendan(self, interaction: discord.Interaction):
         await interaction.response.defer(thinking=False)
         
-        player = get_player_full_info(interaction.user.id)
-        if not player:
-            await interaction.followup.send('❌ Bạn chưa đăng ký!')
-            return
+        try:
+            player = get_player_full_info(interaction.user.id)
+            if not player:
+                await interaction.followup.send('❌ Bạn chưa đăng ký!')
+                return
+            
+            # ⭐ CHECK NGHỀ LUYỆN ĐAN SƯ
+            from database.player_repo import get_player_nghe_nghiep
+            nghe = get_player_nghe_nghiep(player.player_id)
+            if not nghe or nghe['loai'] != 'LuyenDan':
+                await interaction.followup.send(
+                    '❌ Bạn không phải **Luyện Đan Sư**!\n'
+                    'Dùng `/chonnghe` để chọn nghề Luyện Đan Sư.'
+                )
+                return
+            
+            embed = discord.Embed(
+                title='⚗️ Luyện Đan',
+                description=(
+                    'Chọn chế độ luyện đan:\n\n'
+                    '📜 **Theo công thức** — Chọn đan phương đã học, hệ thống tự lấy nguyên liệu.\n'
+                    '🎨 **Tự do** — Tự chọn linh thảo, nếu khớp công thức sẽ tự học đan phương.'
+                ),
+                color=discord.Color.orange(),
+            )
+            
+            view = MenuChonCheDo(player.player_id)
+            await interaction.followup.send(embed=embed, view=view)
         
-        embed = discord.Embed(
-            title='⚗️ Luyện Đan',
-            description=(
-                'Chọn chế độ luyện đan:\n\n'
-                '📜 **Theo công thức** — Chọn đan phương đã học, hệ thống tự lấy nguyên liệu.\n'
-                '🎨 **Tự do** — Tự chọn linh thảo, nếu khớp công thức sẽ tự học đan phương.'
-            ),
-            color=discord.Color.orange(),
-        )
-        
-        view = MenuChonCheDo(player.player_id)
-        await interaction.followup.send(embed=embed, view=view)
+        except Exception as e:
+            print(f'[ERROR] luyendan: {e}')
+            import traceback
+            traceback.print_exc()
+            try:
+                await interaction.followup.send(
+                    f'❌ Có lỗi xảy ra: `{e}`'
+                )
+            except:
+                pass
 
 
 async def setup(bot):

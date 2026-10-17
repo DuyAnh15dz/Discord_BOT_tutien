@@ -21,7 +21,7 @@ Bot Discord tu tiên với hệ thống tu luyện, cảnh giới, linh căn, lu
 
 ```bash
 # Clone repo
-git clone https://github.com/DuyAnh15dz/Discord_BOT_tu_tien.git
+git clone https://github.com/DuyAnh15dz/Discord_BOT_tutien.git
 cd Discord_BOT_tu_tien
 
 # Tạo virtual environment
